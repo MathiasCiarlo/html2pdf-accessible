@@ -9,6 +9,11 @@ jest.mock("../css/layout/bounds");
 jest.mock("../dom/document-cloner");
 jest.mock("../dom/node-parser", () => {
   return {
+    parseBackgroundColor: (
+      _context: unknown,
+      _element: unknown,
+      override?: string | null
+    ) => (override === null ? 0 : 0xffffffff),
     isBodyElement: () => false,
     isHTMLElement: () => false,
     parseTree: jest.fn().mockImplementation(() => {

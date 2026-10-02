@@ -13,18 +13,18 @@ describe("property-descriptors", () => {
 
     it("great fonts 40 library", () =>
       deepEqual(fontFamilyParse("great fonts 40 library"), [
-        "'great fonts 40 library'",
+        "great fonts 40 library",
       ]));
 
     it('preferred font, "quoted fallback font", font', () =>
       deepEqual(
         fontFamilyParse('preferred font, "quoted fallback font", font'),
-        ["'preferred font'", "'quoted fallback font'", "font"]
+        ["preferred font", "quoted fallback font", "font"]
       ));
 
     it("'escaping test\\'s font'", () =>
       deepEqual(fontFamilyParse("'escaping test\\'s font'"), [
-        "'escaping test's font'",
+        "escaping test's font",
       ]));
   });
 });
