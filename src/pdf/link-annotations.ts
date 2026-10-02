@@ -1,3 +1,4 @@
+import { safeExternalLinkUri } from "./link-uri";
 import {
   PDFArray,
   PDFDict,
@@ -38,7 +39,11 @@ export function addLinkAnnotations(
     ...Array.from(entries.keys(), (n) => n + 1)
   );
   for (const { tag, node, ref } of links) {
-    if (!tag.linkUri) continue;
+    const uri = tag.linkUri ? safeExternalLinkUri(tag.linkUri) : undefined;
+    if (!tag.linkDestinationIdentifier && !uri) {
+      node.set(key("S"), key("Span"));
+      continue;
+    }
     for (const bounds of tag.renderedBounds || []) {
       const page = pdf.getPages()[bounds.pageIndex];
       if (!page) throw new Error("Invalid link annotation page");
@@ -50,8 +55,10 @@ export function addLinkAnnotations(
         F: 4,
         Border: [0, 0, 0],
         StructParent: nextKey,
-        Contents: PDFHexString.fromText(tag.linkText || tag.linkUri),
-        A: { S: "URI", URI: PDFString.of(tag.linkUri) },
+        Contents: PDFHexString.fromText(tag.linkText || uri || ""),
+        ...(uri && !tag.linkDestinationIdentifier
+          ? { A: { S: "URI", URI: PDFString.of(uri) } }
+          : {}),
       });
       if (tag.linkDestinationIdentifier) {
         const target = Array.from(tags.values()).find(

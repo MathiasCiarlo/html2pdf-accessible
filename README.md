@@ -65,6 +65,19 @@ every document. Reading order, descriptions and actual screen-reader table
 navigation need manual testing. CSS support is limited by the DOM renderer;
 browser layout remains the reference for supported content.
 
+## Link and CSS safety
+
+External PDF links allow only `https:` and `http:`. Relative web URLs are resolved
+against the document base URL. Internal fragment links become PDF page destinations.
+Other schemes, including `javascript:`, `data:`, `file:` and `mailto:`, remain
+visible text without an active PDF link. URI policy is enforced at tag generation
+and annotation serialization.
+
+Relative color `calc()` expressions are evaluated as numbers, channel references,
+parentheses and `+`, `-`, `*`, `/` operators. Unknown tokens, functions,
+non-finite results and excessive nesting are rejected; CSS is never evaluated
+as JavaScript. This does not make the library an HTML sanitizer.
+
 ## Development and tests
 
 Use Node 22 or newer for development. The existing published runtime declaration

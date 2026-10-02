@@ -1,3 +1,4 @@
+import { safeExternalLinkUri } from "./link-uri";
 import { PDFTag, PDFTagAttribute } from "@rollerbird/canvaskit-wasm-pdf";
 import { resolveTableHeaders, TableHeaderInfo } from "./table-headers";
 
@@ -593,7 +594,11 @@ function processElement(
     structureType === PDF_STRUCTURE_TYPES.Link &&
     element.hasAttribute("href")
   ) {
-    pdfTag.linkUri = (element as HTMLAnchorElement).href;
+    const href = element.getAttribute("href")?.trim() || "";
+    pdfTag.linkUri = href.startsWith("#")
+      ? href
+      : safeExternalLinkUri((element as HTMLAnchorElement).href);
+    if (!pdfTag.linkUri) pdfTag.type = PDF_STRUCTURE_TYPES.Span;
     pdfTag.linkText =
       element.getAttribute("aria-label") ||
       element.textContent?.replace(/\s+/g, " ").trim() ||
@@ -636,7 +641,7 @@ export function generateDocumentStructure(htmlElement: Element | Element[]): {
 
   const finalizeTags = () => {
     for (const [element, tag] of context.tagMap) {
-      const href = element.getAttribute("href");
+      const href = element.getAttribute("href")?.trim();
       if (!tag.linkUri || !href?.startsWith("#")) continue;
       const target =
         href === "#"
