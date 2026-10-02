@@ -51,6 +51,8 @@ export class IFrameElementContainer extends ElementContainer {
             : bodyBackgroundColor
           : documentBackgroundColor;
       }
-    } catch (e) {}
+    } catch (e) {
+      // Cross-origin iframe contents cannot be inspected.
+    }
   }
 }

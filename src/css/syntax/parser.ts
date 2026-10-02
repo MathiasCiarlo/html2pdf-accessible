@@ -77,6 +77,8 @@ export class Parser {
 
   parseComponentValues(): CSSValue[] {
     const values = [];
+    // CSS token consumers terminate with return or break on a sentinel.
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const value = this.consumeComponentValue();
       if (value.type === TokenType.EOF_TOKEN) {
@@ -106,6 +108,8 @@ export class Parser {
     const block: CSSBlock = { type, values: [] };
 
     let token = this.consumeToken();
+    // CSS token consumers terminate with return or break on a sentinel.
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       if (token.type === TokenType.EOF_TOKEN || isEndingTokenFor(token, type)) {
         return block;
@@ -124,6 +128,9 @@ export class Parser {
       type: TokenType.FUNCTION,
     };
 
+    // CSS token consumers terminate with return or break on a sentinel.
+
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const token = this.consumeToken();
       if (

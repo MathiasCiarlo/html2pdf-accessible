@@ -429,6 +429,8 @@ export class Tokenizer {
       case SOLIDUS:
         if (this.peekCodePoint(0) === ASTERISK) {
           this.consumeCodePoint();
+          // CSS token consumers terminate with return or break on a sentinel.
+          // eslint-disable-next-line no-constant-condition
           while (true) {
             let c = this.consumeCodePoint();
             if (c === ASTERISK) {
@@ -646,6 +648,9 @@ export class Tokenizer {
       return BAD_URL_TOKEN;
     }
 
+    // CSS token consumers terminate with return or break on a sentinel.
+
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const codePoint = this.consumeCodePoint();
       if (codePoint === EOF || codePoint === RIGHT_PARENTHESIS) {
@@ -689,6 +694,8 @@ export class Tokenizer {
   }
 
   private consumeBadUrlRemnants(): void {
+    // CSS token consumers terminate with return or break on a sentinel.
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const codePoint = this.consumeCodePoint();
       if (codePoint === RIGHT_PARENTHESIS || codePoint === EOF) {
@@ -752,6 +759,8 @@ export class Tokenizer {
       }
 
       i++;
+      // CSS string consumption terminates when a closing quote or EOF is found.
+      // eslint-disable-next-line no-constant-condition
     } while (true);
   }
 
@@ -848,6 +857,8 @@ export class Tokenizer {
 
   private consumeName(): string {
     let result = "";
+    // CSS token consumers terminate with return or break on a sentinel.
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const codePoint = this.consumeCodePoint();
       if (isNameCodePoint(codePoint)) {

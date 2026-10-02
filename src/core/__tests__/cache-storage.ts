@@ -253,7 +253,9 @@ describe("cache-storage", () => {
       try {
         await cache.match("http://html2canvas.hertzen.com/test.jpg");
         fail("Expected result to timeout");
-      } catch (e) {}
+      } catch (e) {
+        // Rejection is expected for an image timeout.
+      }
     });
   });
 
@@ -279,6 +281,8 @@ describe("cache-storage", () => {
     try {
       await cache.match("http://example.com/test.jpg");
       fail("Expected result to timeout");
-    } catch (e) {}
+    } catch (e) {
+      // Rejection is expected for an image timeout.
+    }
   });
 });

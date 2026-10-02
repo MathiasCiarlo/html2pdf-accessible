@@ -51,7 +51,7 @@ export const isRelativeTransform = (tokens: CSSValue[]): boolean =>
   (tokens[0].type === TokenType.IDENT_TOKEN ? tokens[0].value : "unknown") ===
   "from";
 
-export const clamp = (value: number, min: number, max: number) => {
+export const clamp = (value: number, min: number, max: number): number => {
   return Math.min(Math.max(value, min), max);
 };
 

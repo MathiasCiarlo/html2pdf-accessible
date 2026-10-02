@@ -11,7 +11,7 @@ import { SelectElementContainer } from "./elements/select-element-container";
 import { TextareaElementContainer } from "./elements/textarea-element-container";
 import { IFrameElementContainer } from "./replaced-elements/iframe-element-container";
 import { Context } from "../core/context";
-import { COLORS, parseColor } from "../css/types/color";
+import { Color, COLORS, parseColor } from "../css/types/color";
 import { isTransparent } from "../css/types/color-utilities";
 
 const LIST_OWNERS = ["OL", "UL", "MENU"];
@@ -188,7 +188,7 @@ export const parseBackgroundColor = (
   context: Context,
   element: HTMLElement,
   backgroundColorOverride?: string | null
-) => {
+): Color => {
   const ownerDocument = element.ownerDocument;
   // http://www.w3.org/TR/css3-background/#special-backgrounds
   const documentBackgroundColor = ownerDocument.documentElement

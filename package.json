@@ -67,7 +67,7 @@
     "build:dev": "webpack --mode=development",
     "build:watch": "webpack --mode=development --watch",
     "format": "prettier --write \"{src,tests,scripts}/**/*.ts\"",
-    "lint": "eslint src/**/*.ts --max-warnings 0",
+    "lint": "eslint src tests *.js --ext .ts,.js,.cjs --max-warnings 0",
     "test": "npm run lint && npm run unittest",
     "unittest": "jest",
     "prepare": "if [ \"$SKIP_PREPARE\" != \"true\" ]; then husky install; fi"
