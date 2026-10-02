@@ -1,0 +1,50 @@
+name: Library and PDF checks
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run lint
+  pdf:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: docker build -t html2pdf-tests -f tests/pdf/Dockerfile .
+      - name: Export, inspect, compare images and test package
+        run: >-
+          docker run --rm --mount "type=bind,source=$PWD,target=/work"
+          --mount type=volume,source=html2pdf-test-deps,target=/work/node_modules
+          html2pdf-tests bash -lc
+          "npm ci --ignore-scripts && npm run test:pdf && npm run test:pdf:visual && npm run build && npm run test:package"
+      - run: npm ci --ignore-scripts
+      - name: Validate PDF/UA-1
+        run: npm run test:pdf:validate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pdf-test-results
+          path: .cache/pdf-tests/
+          if-no-files-found: error

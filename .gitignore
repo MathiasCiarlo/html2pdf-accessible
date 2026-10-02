@@ -4,3 +4,7 @@ lib/
 build/
 coverage/
 .husky/
+.cache/
+*.tgz
+!deps/*.tgz
+.idea/

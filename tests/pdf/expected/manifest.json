@@ -1,0 +1,29 @@
+{
+  "platform": "linux",
+  "chromium": "153.0.8010.12",
+  "files": [
+    "minimal-1.png",
+    "quote-1.png",
+    "quote-2.png",
+    "quote-3.png",
+    "discount-1.png",
+    "discount-2.png",
+    "discount-3.png",
+    "long-1.png",
+    "long-2.png",
+    "long-3.png",
+    "long-4.png",
+    "long-5.png",
+    "long-6.png",
+    "long-7.png",
+    "long-8.png",
+    "long-no-discount-1.png",
+    "long-no-discount-2.png",
+    "long-no-discount-3.png",
+    "long-no-discount-4.png",
+    "long-no-discount-5.png",
+    "long-no-discount-6.png",
+    "long-no-discount-7.png",
+    "long-no-discount-8.png"
+  ]
+}
