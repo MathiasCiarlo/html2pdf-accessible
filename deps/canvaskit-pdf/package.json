@@ -1,0 +1,22 @@
+{
+  "name": "@html2pdf-skia/canvaskit-pdf",
+  "version": "0.42.0-pdf.1",
+  "description": "Google CanvasKit built from pinned source with a reviewable SkPDF bridge",
+  "main": "bin/canvaskit.js",
+  "types": "types/index.d.ts",
+  "license": "BSD-3-Clause AND MIT",
+  "files": [
+    "bin",
+    "types",
+    "LICENSE",
+    "THIRD_PARTY_LICENSES.txt",
+    "provenance.json",
+    "README.md",
+    "pdf_bindings.cpp",
+    "CHROMIUM-LICENSE",
+    "chromium-license-source.json"
+  ],
+  "dependencies": {
+    "@webgpu/types": "0.1.69"
+  }
+}

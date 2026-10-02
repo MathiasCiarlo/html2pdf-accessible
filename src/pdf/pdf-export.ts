@@ -1,4 +1,4 @@
-import { CanvasKit, PDFMetadata, PDFTag } from "@rollerbird/canvaskit-wasm-pdf";
+import { CanvasKit, PDFMetadata, PDFTag } from "@html2pdf-skia/canvaskit-pdf";
 import { parseBackgroundColor, parseTree } from "../dom/node-parser";
 import { Context } from "../core/context";
 import { SkiaRenderer } from "../render/skia/skia-renderer";

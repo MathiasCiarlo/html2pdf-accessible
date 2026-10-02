@@ -1,4 +1,4 @@
-import { PDFTag, CanvasKit } from "@rollerbird/canvaskit-wasm-pdf";
+import { PDFTag, CanvasKit } from "@html2pdf-skia/canvaskit-pdf";
 import {
   defaultUserToPdfScale,
   exportToPdf,

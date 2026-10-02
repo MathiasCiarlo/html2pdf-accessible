@@ -1,4 +1,4 @@
-import { PDFTag } from "@rollerbird/canvaskit-wasm-pdf";
+import { PDFTag } from "@html2pdf-skia/canvaskit-pdf";
 import {
   PDFArray,
   PDFDict,
@@ -58,7 +58,7 @@ function addStructureAttribute(
   node.set(key("A"), pdf.context.obj(retained));
 }
 
-/** Bridge the missing ID/Headers operations in canvaskit-wasm-pdf 0.1.3.
+/** Bridge the missing ID/Headers operations in Google SkPDF.
  * Also restore clipped captions as invisible, embedded-font text.
  */
 export async function finalizePDFStructure(

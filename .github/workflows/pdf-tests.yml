@@ -8,6 +8,16 @@ on:
 permissions:
   contents: read
 jobs:
+  canvaskit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/canvaskit/verify.cjs
+      - name: Rebuild pinned Google Skia and compare shipped artifacts
+        run: node scripts/canvaskit/build.cjs --check
   unit:
     runs-on: ${{ matrix.os }}
     strategy:

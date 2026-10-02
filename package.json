@@ -28,7 +28,8 @@
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "deps/"
+    "deps/",
+    "scripts/canvaskit/"
   ],
   "homepage": "https://github.com/pushpagarwal/html2pdf-skia",
   "repository": {
@@ -66,7 +67,7 @@
     "webpack-cli": "^6.0.1"
   },
   "scripts": {
-    "prebuild": "rimraf lib/ && rimraf build/ && mkdirp lib && mkdirp build",
+    "prebuild": "npm run verify:canvaskit && rimraf lib/ && rimraf build/ && mkdirp lib && mkdirp build",
     "build": "webpack --mode=production",
     "prepublishOnly": "npm run build",
     "build:dev": "webpack --mode=development",
@@ -83,18 +84,21 @@
     "test:pdf:update": "node scripts/pdf/visual.cjs --update",
     "test:package": "node scripts/pdf/package.cjs",
     "lint:changed": "node scripts/lint-changed.cjs",
-    "prebuild:dev": "rimraf lib/ && rimraf build/ && mkdirp lib && mkdirp build"
+    "prebuild:dev": "npm run verify:canvaskit && rimraf lib/ && rimraf build/ && mkdirp lib && mkdirp build",
+    "build:canvaskit": "node scripts/canvaskit/build.cjs",
+    "test:canvaskit:rebuild": "node scripts/canvaskit/build.cjs --check",
+    "verify:canvaskit": "node scripts/canvaskit/verify.cjs"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
-    "@rollerbird/canvaskit-wasm-pdf": "file:deps/rollerbird-canvaskit-wasm-pdf-0.1.3.tgz",
     "css-line-break": "^2.1.0",
     "emoji-regex-xs": "^2.0.1",
     "pdf-lib": "^1.17.1",
-    "text-segmentation": "^1.0.3"
+    "text-segmentation": "^1.0.3",
+    "@html2pdf-skia/canvaskit-pdf": "file:deps/canvaskit-pdf"
   },
   "bundleDependencies": [
-    "@rollerbird/canvaskit-wasm-pdf"
+    "@html2pdf-skia/canvaskit-pdf"
   ],
   "lint-staged": {
     "{src,tests}/**/*.ts": [

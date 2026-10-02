@@ -54,7 +54,7 @@ figures with alternative text/bounds, link annotations, XMP, outlines, hidden
 captions and line wrapping. HTML must provide meaningful semantics, image
 alternatives, document language and title.
 
-The bundled CanvasKit dependency lacks some PDF structure operations. A final
+Google SkPDF lacks some PDF structure operations. A final
 pdf-lib pass adds the corresponding structure and annotations. Visually clipped
 plain-text captions are restored as invisible embedded-font text. Custom font
 collections must implement optional `getFontData(families, weight)` for these
@@ -64,6 +64,32 @@ Passing veraPDF checks does **not** establish full PDF/UA or WCAG conformance fo
 every document. Reading order, descriptions and actual screen-reader table
 navigation need manual testing. CSS support is limited by the DOM renderer;
 browser layout remains the reference for supported content.
+
+## Auditable CanvasKit / WASM
+
+The backend is built from [Google Skia CanvasKit](https://skia.googlesource.com/skia/+/e2def78fa232884d4aedcf3ad92d4a0dd673b898/modules/canvaskit/),
+release 0.42.0, with our MIT-licensed C++ bridge to SkPDF. Official published
+CanvasKit does not expose PDF generation; the bridge provides document creation,
+page lifecycle, structure tags and stable font IDs. The existing public library
+API and PDF layout are preserved.
+
+Sources, licenses and provenance are under `deps/canvaskit-pdf/`. Every source
+revision and the Emscripten build image are pinned. Normal installation uses the
+included binaries; it does not download or compile Skia. Build hooks and tests
+verify their hashes against the source manifest.
+
+```sh
+npm run verify:canvaskit
+npm run build:canvaskit          # Docker: rebuild and replace included artifacts
+npm run test:canvaskit:rebuild   # Docker: rebuild and compare, without replacing
+```
+
+Only rebuilding requires Docker and network access to official source repositories.
+Python and the C++ toolchain run inside the pinned build image. Build commands
+use a Docker volume for source/dependency and compilation caches. CI rebuilds
+from source in a fresh runner and requires the JavaScript, WASM, types, licenses
+and provenance to match the included files. The build scripts are also shipped
+in the npm package. See [backend details](deps/canvaskit-pdf/README.md).
 
 ## Link and CSS safety
 

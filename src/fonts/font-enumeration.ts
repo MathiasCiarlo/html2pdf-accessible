@@ -1,4 +1,4 @@
-import { FontMgr } from "@rollerbird/canvaskit-wasm-pdf";
+import { FontMgr } from "@html2pdf-skia/canvaskit-pdf";
 import { Context } from "../core/context";
 import { Bounds } from "../css/layout/bounds";
 import { fontFamily } from "../css/property-descriptors/font-family";

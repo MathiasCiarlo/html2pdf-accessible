@@ -3,7 +3,7 @@ import {
   Font,
   Typeface,
   TypefaceFontProvider,
-} from "@rollerbird/canvaskit-wasm-pdf";
+} from "@html2pdf-skia/canvaskit-pdf";
 import {
   FontFamilyClass,
   FontStylePojo,
@@ -162,7 +162,7 @@ export class SkiaFontCollection implements IFontCollection {
     await delay(0); // Yield to allow font loading to complete
   }
   getFont(typeface: Typeface, fontSize: number): Font {
-    const cacheKey = `${getTypefaceKey(typeface)}-${fontSize}`;
+    const cacheKey = `${this.canvasKit.GetTypefaceId(typeface)}-${fontSize}`;
     const cachedFont = this.fontsCache.get(cacheKey);
     if (cachedFont) {
       return cachedFont;
@@ -191,10 +191,4 @@ export class SkiaFontCollection implements IFontCollection {
 
 export function createFontCollection(canvasKit: CanvasKit): IFontCollection {
   return new SkiaFontCollection(canvasKit);
-}
-
-function getTypefaceKey(typeface: Typeface): string {
-  return `${typeface.getFamilyName()}-${typeface.getFontStyle().weight}-${
-    typeface.getFontStyle().slant
-  }`;
 }

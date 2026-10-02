@@ -28,8 +28,8 @@ const baseConfig = {
     new CopyPlugin({
       patterns: [
         {
-          from: "node_modules/@rollerbird/canvaskit-wasm-pdf/bin/canvaskit-pdf.wasm",
-          to: "wasm",
+          from: "node_modules/@html2pdf-skia/canvaskit-pdf/bin/canvaskit.wasm",
+          to: "wasm/canvaskit-pdf.wasm",
         },
       ],
     }),

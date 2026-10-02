@@ -1,5 +1,5 @@
 import { safeExternalLinkUri } from "./link-uri";
-import { PDFTag, PDFTagAttribute } from "@rollerbird/canvaskit-wasm-pdf";
+import { PDFTag, PDFTagAttribute } from "@html2pdf-skia/canvaskit-pdf";
 import { resolveTableHeaders, TableHeaderInfo } from "./table-headers";
 
 // These properties are written by the final structure pass, not by CanvasKit.

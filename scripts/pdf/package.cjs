@@ -43,13 +43,15 @@ async function packageTest() {
   assert.equal(packs.length, 1);
   for (const file of packs[0].files) {
     assert(
-      !/(^|\/)(__tests__|__mocks__|test-data|tests|scripts)(\/|$)/.test(
-        file.path
-      ),
+      !file.path.endsWith(".tgz"),
+      `Opaque archive in package: ${file.path}`
+    );
+    assert(
+      !/(^|\/)(__tests__|__mocks__|test-data|tests)(\/|$)/.test(file.path),
       `Test material in package: ${file.path}`
     );
     assert(
-      /^(lib\/|deps\/|node_modules\/|package.json$|README.md$|LICENSE$|THIRD_PARTY_NOTICES.md$)/.test(
+      /^(lib\/|deps\/|scripts\/canvaskit\/|node_modules\/|package.json$|README.md$|LICENSE$|THIRD_PARTY_NOTICES.md$)/.test(
         file.path
       ),
       `Unexpected packaged file: ${file.path}`
@@ -81,6 +83,14 @@ async function packageTest() {
   );
   await fs.access(path.join(packageRoot, manifest.typings));
   await fs.access(path.join(packageRoot, "lib/wasm/canvaskit-pdf.wasm"));
+  await fs.access(path.join(packageRoot, "scripts/canvaskit/build.py"));
+  await fs.access(
+    path.join(packageRoot, "deps/canvaskit-pdf/pdf_bindings.cpp")
+  );
+  await require(path.join(
+    packageRoot,
+    "scripts/canvaskit/verify.cjs"
+  )).verify();
   const server = createServer(path.join(packageRoot, "lib"));
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   let browser;

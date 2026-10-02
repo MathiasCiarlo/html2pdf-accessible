@@ -1,4 +1,4 @@
-import { Font, Typeface } from "@rollerbird/canvaskit-wasm-pdf";
+import { Font, Typeface } from "@html2pdf-skia/canvaskit-pdf";
 import { SkiaFontCollection } from "../../fonts/font-collection";
 import { FontFamilyClass, FontStylePojo } from "../../fonts/interfaces";
 import { CSSParsedDeclaration } from "../../css";

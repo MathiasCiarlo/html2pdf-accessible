@@ -1,5 +1,5 @@
-import CanvasKitInit from "@rollerbird/canvaskit-wasm-pdf";
-import { CanvasKit } from "@rollerbird/canvaskit-wasm-pdf";
+import CanvasKitInit from "@html2pdf-skia/canvaskit-pdf";
+import { CanvasKit } from "@html2pdf-skia/canvaskit-pdf";
 
 /**
  * Cached CanvasKit instance to avoid multiple loads

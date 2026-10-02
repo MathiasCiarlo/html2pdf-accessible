@@ -4,10 +4,11 @@ import {
   Canvas as SkiaCanvas,
   Paint as SkiaPaint,
   Path as SkiaPath,
+  PathBuilder,
   Shader as SkiaShader,
   Image as SkiaImage,
   Font as SkiaFont,
-} from "@rollerbird/canvaskit-wasm-pdf";
+} from "@html2pdf-skia/canvaskit-pdf";
 
 import {
   ElementPaint,
@@ -474,9 +475,11 @@ export class SkiaRenderer {
   }
 
   private createSkiaPath(paths: Path[]): SkiaPath {
-    const skiaPath = new this.canvasKit.Path();
+    const skiaPath = new this.canvasKit.PathBuilder();
     this.formatSkiaPath(skiaPath, paths);
-    return skiaPath;
+    const path = skiaPath.detach();
+    skiaPath.delete();
+    return path;
   }
 
   async renderNodeContent(paint: ElementPaint): Promise<void> {
@@ -629,7 +632,7 @@ export class SkiaRenderer {
 
       if (container.type === CHECKBOX) {
         if (container.checked) {
-          const checkPath = new this.canvasKit.Path();
+          const checkPath = new this.canvasKit.PathBuilder();
           checkPath.moveTo(
             container.bounds.left + size * 0.39363,
             container.bounds.top + size * 0.79
@@ -659,7 +662,9 @@ export class SkiaRenderer {
           const paint = this.createPaint("fill");
           paint.setColor(this.parseColorWithAlpha(INPUT_COLOR));
 
-          this.canvas.drawPath(checkPath, paint);
+          const path = checkPath.detach();
+          this.canvas.drawPath(path, paint);
+          path.delete();
 
           paint.delete();
           checkPath.delete();
@@ -856,24 +861,28 @@ export class SkiaRenderer {
   }
 
   mask(paths: Path[]): void {
-    const maskPath = new this.canvasKit.Path();
+    const maskPath = new this.canvasKit.PathBuilder();
     maskPath.addRect([0, 0, this.options.width, this.options.height]);
 
     // Add the mask paths (reversed)
     const reversedPaths = paths.slice(0).reverse();
     this.formatSkiaPath(maskPath, reversedPaths);
 
-    this.canvas.clipPath(maskPath, this.canvasKit.ClipOp.Intersect, true);
+    const path = maskPath.detach();
+    this.canvas.clipPath(path, this.canvasKit.ClipOp.Intersect, true);
+    path.delete();
     maskPath.delete();
   }
 
   path(paths: Path[]): SkiaPath {
-    const skiaPath = new this.canvasKit.Path();
+    const skiaPath = new this.canvasKit.PathBuilder();
     this.formatSkiaPath(skiaPath, paths);
-    return skiaPath;
+    const path = skiaPath.detach();
+    skiaPath.delete();
+    return path;
   }
 
-  formatSkiaPath(skiaPath: SkiaPath, paths: Path[]): void {
+  formatSkiaPath(skiaPath: PathBuilder, paths: Path[]): void {
     paths.forEach((point, index) => {
       const start: Vector = isBezierCurve(point) ? point.start : point;
       if (index === 0) {

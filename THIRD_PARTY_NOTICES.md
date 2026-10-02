@@ -1,9 +1,13 @@
 # Third-party notices
 
 Upstream html2pdf-skia and html2canvas attribution and the MIT license are retained.
-The bundled `@rollerbird/canvaskit-wasm-pdf` 0.1.3 archive contains Google Skia /
-CanvasKit code. Its license is distributed in the dependency. The original
-archive under `deps/` is required for installation and is retained.
+The bundled `@html2pdf-skia/canvaskit-pdf` is built from Google's open-source
+Skia CanvasKit 0.42.0, revision `e2def78fa232884d4aedcf3ad92d4a0dd673b898`.
+Google Skia is BSD-3-Clause; our `pdf_bindings.cpp` bridge is MIT. Source URLs,
+compiler image digest, dependency revisions and artifact hashes are recorded in
+`deps/canvaskit-pdf/provenance.json`. The Skia license, Chromium PartitionAlloc
+license and third-party notices are shipped alongside the bridge and binaries.
+See `deps/canvaskit-pdf/THIRD_PARTY_LICENSES.txt` for the included notices.
 
 Runtime dependencies include pdf-lib and @pdf-lib/fontkit (MIT), css-line-break,
 emoji-regex-xs and text-segmentation. Their licenses accompany the dependencies.

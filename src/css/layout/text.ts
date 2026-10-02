@@ -5,7 +5,7 @@ import { splitGraphemes } from "text-segmentation";
 import { Bounds, parseBounds } from "./bounds";
 import { FEATURES } from "../../core/features";
 import { Context } from "../../core/context";
-import { Font } from "@rollerbird/canvaskit-wasm-pdf";
+import { Font } from "@html2pdf-skia/canvaskit-pdf";
 import { createSkiaFont, getFinalFont } from "../../render/skia/skia-font";
 
 export class TextBounds {

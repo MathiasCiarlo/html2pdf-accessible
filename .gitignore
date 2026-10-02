@@ -6,5 +6,4 @@ coverage/
 .husky/
 .cache/
 *.tgz
-!deps/*.tgz
 .idea/

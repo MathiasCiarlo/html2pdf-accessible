@@ -1,0 +1,37 @@
+{
+  "skiaRevision": "e2def78fa232884d4aedcf3ad92d4a0dd673b898",
+  "skiaRelease": "canvaskit/0.42.0",
+  "source": "https://skia.googlesource.com/skia.git",
+  "buildImage": "emscripten/emsdk:4.0.10@sha256:90b757eb11fa9a0e3ce4d2d9f76d932a56018e4accc37b5a28b2783751e60eb7",
+  "bridgeSha256": "692856b169658c21103668fe44238e32a2dcc4b6585111e5bee035c1dc05e0d4",
+  "buildScriptSha256": "b73cfdf474a5005b2de532d0762e7217ff3187cc6243660b2cbfeedd90ac66b5",
+  "depsSha256": "2b5dc93b229ae782d82f42e0c5d0eb6c810285bd8ae65196badee3364f1687db",
+  "typeDefinitionsSha256": "a7017a8fd21f27fdd1afe8036841d7ce0979b2410954fcc6d3f80444c171a6c6",
+  "licensesSha256": "2d21cd79c68331a7386b2012cd8d964744faa229f853a3243a299ba69429b213",
+  "dependencies": {
+    "buildtools": "https://chromium.googlesource.com/chromium/src/buildtools.git@729495f2ffa69080907780591fa2a630b2556e98",
+    "third_party/externals/brotli": "https://skia.googlesource.com/external/github.com/google/brotli.git@6d03dfbedda1615c4cba1211f8d81735575209c8",
+    "third_party/externals/expat": "https://chromium.googlesource.com/external/github.com/libexpat/libexpat.git@6154446fccefbf3ca644894f598969113b0c7bcd",
+    "third_party/externals/freetype": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@264b5fbf5b912b39f98d038bf75d39be0a73f21b",
+    "third_party/externals/harfbuzz": "https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@9cb1fee51069b206effb4736e443b038d230789d",
+    "third_party/externals/highway": "https://chromium.googlesource.com/external/github.com/google/highway.git@457c891775a7397bdb0376bb1031e6e027af1c48",
+    "third_party/externals/icu": "https://chromium.googlesource.com/chromium/deps/icu.git@d578f2e8b7bd5938e21cfb6bf15c079e0aa5b738",
+    "third_party/externals/libgrapheme": "https://skia.googlesource.com/external/github.com/FRIGN/libgrapheme/@c0cab63c5300fa12284194fbef57aa2ed62a94c0",
+    "third_party/externals/libjpeg-turbo": "https://chromium.googlesource.com/chromium/deps/libjpeg_turbo.git@e14cbfaa85529d47f9f55b0f104a579c1061f9ad",
+    "third_party/externals/libpng": "https://skia.googlesource.com/third_party/libpng.git@d5515b5b8be3901aac04e5bd8bd5c89f287bcd33",
+    "third_party/externals/libwebp": "https://chromium.googlesource.com/webm/libwebp.git@845d5476a866141ba35ac133f856fa62f0b7445f",
+    "third_party/externals/partition_alloc": "https://chromium.googlesource.com/chromium/src/base/allocator/partition_allocator.git@03cc513177b4340bee3dbfd46f6dd5fdded43b79",
+    "third_party/externals/perfetto": "https://android.googlesource.com/platform/external/perfetto@93885509be1c9240bc55fa515ceb34811e54a394",
+    "third_party/externals/wuffs": "https://skia.googlesource.com/external/github.com/google/wuffs-mirror-release-c.git@e3f919ccfe3ef542cfc983a82146070258fb57f8",
+    "third_party/externals/zlib": "https://chromium.googlesource.com/chromium/src/third_party/zlib@646b7f569718921d7d4b5b8e22572ff6c76f2596"
+  },
+  "chromiumLicenseSource": {
+    "url": "https://chromium.googlesource.com/chromium/src/+/164300e8cb378e20da0b3eb9b0494a2562cd5ea2/LICENSE?format=TEXT",
+    "revision": "164300e8cb378e20da0b3eb9b0494a2562cd5ea2",
+    "sha256": "368cca1106be99d39ecd32a38d8305585d802a475effb66380b91ffc9bcf709b"
+  },
+  "artifacts": {
+    "canvaskit.js": "12bf7a819b9cbe4dd2e2dea8a5159ec78c2c78211692fcae6c4ff8459641c81e",
+    "canvaskit.wasm": "2e3ec5711e4311b216b149642577fbdcdc1ce08a87de3467f843f4af940c5caa"
+  }
+}
