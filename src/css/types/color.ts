@@ -1,3 +1,4 @@
+import { evaluateColorCalculation } from "./color-calculation";
 import {
   CSSValue,
   isIdentToken,
@@ -168,50 +169,13 @@ const _color = (context: Context, args: CSSValue[]) => {
       color: [number, number, number, number],
       token: CSSValue
     ) => {
-      if (isNumberToken(token)) {
-        return token.number;
-      }
-
-      const posFromVal = (value: string): number => {
-        return value === "r" || value === "x"
-          ? 0
-          : value === "g" || value === "y"
-          ? 1
-          : 2;
-      };
-
-      if (isIdentToken(token)) {
-        const position = posFromVal(token.value);
-        return color[position];
-      }
-
-      const parseCalc = (args: CSSValue[]): string => {
-        const parts = args.filter(nonFunctionArgSeparator);
-        let expression = "(";
-        for (const part of parts) {
-          expression +=
-            part.type === TokenType.FUNCTION && part.name === "calc"
-              ? parseCalc(part.values)
-              : isNumberToken(part)
-              ? part.number
-              : part.type === TokenType.DELIM_TOKEN || isIdentToken(part)
-              ? part.value
-              : "";
-        }
-        expression += ")";
-        return expression;
-      };
-
-      if (token.type === TokenType.FUNCTION) {
-        const args = token.values.filter(nonFunctionArgSeparator);
-        if (token.name === "calc") {
-          const expression = parseCalc(args)
-            .replace(/r|x/, color[0].toString())
-            .replace(/g|y/, color[1].toString())
-            .replace(/b|z/, color[2].toString());
-
-          return new Function("return " + expression)();
-        }
+      if (
+        token.type === TokenType.NUMBER_TOKEN ||
+        token.type === TokenType.IDENT_TOKEN
+      )
+        return evaluateColorCalculation([token], color);
+      if (token.type === TokenType.FUNCTION && token.name === "calc") {
+        return evaluateColorCalculation(token.values, color);
       }
 
       return null;
