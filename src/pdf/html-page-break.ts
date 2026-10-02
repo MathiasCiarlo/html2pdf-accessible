@@ -83,7 +83,12 @@ export class HtmlPageBreak {
       }
 
       // If element is completely inside page, don't traverse children
-      if (elementTop >= 0 && elementBottom <= finalPageHeight) {
+      if (
+        elementTop >= 0 &&
+        (elementBottom <= finalPageHeight ||
+          (elementBottom <= this.pageHeight &&
+            this.shouldTreatAsSingleElement(element)))
+      ) {
         // Element is completely inside page, no need to process children
         if (this.shouldRepeatOnEveryPage(element)) {
           return NO_PAGE_ITEMS; // Don't add to page items, but mark for repeat

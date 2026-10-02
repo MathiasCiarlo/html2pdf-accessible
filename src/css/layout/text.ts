@@ -215,7 +215,7 @@ const breakWords = (str: string, styles: CSSParsedDeclaration): string[] => {
   return words;
 };
 
-const combineLines = (textBounds: TextBounds[]): TextBounds[] => {
+export const combineLines = (textBounds: TextBounds[]): TextBounds[] => {
   const combined: TextBounds[] = [];
   let currentText = "";
   let currentBounds = Bounds.EMPTY;
@@ -227,7 +227,8 @@ const combineLines = (textBounds: TextBounds[]): TextBounds[] => {
       currentBounds = tb.bounds;
       currentFont = tb.font;
     } else if (
-      currentBounds.top + currentBounds.height > tb.bounds.top &&
+      Math.abs(currentBounds.top - tb.bounds.top) < 0.5 &&
+      Math.abs(currentBounds.height - tb.bounds.height) < 0.5 &&
       currentFont === tb.font
     ) {
       currentText += tb.text;

@@ -4,6 +4,8 @@ import { Context } from "../core/context";
 import { SkiaRenderer } from "../render/skia/skia-renderer";
 import { IFontCollection } from "../fonts/interfaces";
 import { SkiaFontCollection } from "../fonts/font-collection";
+import { finalizePDFStructure } from "./finalize-structure";
+import { PDFStructureTag } from "./document-structure";
 
 export const defaultUserToPdfScale = 0.5; // Default scale for PDF rendering
 export interface IPageSize {
@@ -36,6 +38,20 @@ export async function exportToPdf(
   pdfOptions?: Partial<IPdfOptions>
 ): Promise<Blob> {
   const rootTag = inputProvider.getDocumentStructure();
+  const boundedTags = new Map<number, PDFStructureTag>();
+  const collectBoundedTags = (tag: PDFStructureTag) => {
+    if (
+      tag.id !== undefined &&
+      (tag.type === "Figure" ||
+        tag.bookmarkTitle ||
+        tag.linkUri ||
+        tag.isLinkDestination)
+    )
+      boundedTags.set(tag.id, tag);
+    tag.children?.forEach(collectBoundedTags);
+  };
+  collectBoundedTags(rootTag);
+  let pageIndex = 0;
   const metadata: PDFMetadata = {
     title: pdfOptions?.title ?? inputProvider.getDocumentTitle(),
     author: pdfOptions?.author ?? "",
@@ -82,17 +98,54 @@ export async function exportToPdf(
         width: pageWidth * window.devicePixelRatio,
         height: pageHeight * window.devicePixelRatio,
         backgroundColor: backgroundColor,
+        document: nextPageElement.ownerDocument,
         fontCollection:
           (pdfOptions?.fontCollection as SkiaFontCollection) ??
           new SkiaFontCollection(canvasKit),
+        onElementContent: (tagId, corners) => {
+          const tag = boundedTags.get(tagId);
+          if (!tag) return;
+          const xs = corners.filter((_, i) => i % 2 === 0);
+          const ys = corners.filter((_, i) => i % 2 === 1);
+          const rect: [number, number, number, number] = [
+            Math.max(0, Math.min(...xs)),
+            Math.max(0, pageHeight - Math.max(...ys)),
+            Math.min(pageWidth, Math.max(...xs)),
+            Math.min(pageHeight, pageHeight - Math.min(...ys)),
+          ];
+          if (
+            rect.some((value) => !Number.isFinite(value)) ||
+            rect[2] <= rect[0] ||
+            rect[3] <= rect[1]
+          )
+            return;
+          tag.renderedBounds = tag.renderedBounds || [];
+          const previous = tag.renderedBounds.find(
+            (bounds) => bounds.pageIndex === pageIndex
+          );
+          if (previous)
+            previous.rect = [
+              Math.min(previous.rect[0], rect[0]),
+              Math.min(previous.rect[1], rect[1]),
+              Math.max(previous.rect[2], rect[2]),
+              Math.max(previous.rect[3], rect[3]),
+            ];
+          else tag.renderedBounds.push({ pageIndex, rect });
+        },
       }
     );
     await renderer.render(elementContainer);
     canvas.restore();
     // render the page content
     pdfDocument.endPage();
+    pageIndex++;
   }
   const buffer = pdfDocument.close();
   pdfDocument.delete();
-  return new Blob([buffer], { type: "application/pdf" });
+  const bytes = await finalizePDFStructure(
+    new Uint8Array(buffer),
+    rootTag,
+    pdfOptions?.fontCollection
+  );
+  return new Blob([new Uint8Array(bytes).buffer], { type: "application/pdf" });
 }

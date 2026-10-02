@@ -7,17 +7,11 @@
     "prettier"
   ],
   "parserOptions": {
-    "project": [
-      "./tsconfig.json",
-      "./tests/tsconfig.json"
-    ],
+    "project": ["./tsconfig.json", "./tests/tsconfig.json"],
     "ecmaVersion": 2020,
     "sourceType": "module"
   },
-  "plugins": [
-    "@typescript-eslint",
-    "prettier"
-  ],
+  "plugins": ["@typescript-eslint", "prettier"],
   "env": {
     "browser": true,
     "node": true,
@@ -53,10 +47,7 @@
   },
   "overrides": [
     {
-      "files": [
-        "*.js",
-        "*.cjs"
-      ],
+      "files": ["**/*.js", "**/*.cjs"],
       "parserOptions": {
         "project": null
       },

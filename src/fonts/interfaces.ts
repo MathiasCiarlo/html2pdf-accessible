@@ -23,6 +23,7 @@ export type IFontProperties = IFontStyle & {
 export type FontFamilyKey = FontFamilyClass | UnicodeCharacterBucket;
 
 export interface IFontCollection {
+  getFontData?(families: string[], weight: number): ArrayBuffer | undefined;
   addFont(
     buffer: ArrayBuffer,
     family: string,

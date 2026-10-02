@@ -1,4 +1,25 @@
 import { PDFTag, PDFTagAttribute } from "@rollerbird/canvaskit-wasm-pdf";
+import { resolveTableHeaders, TableHeaderInfo } from "./table-headers";
+
+// These properties are written by the final structure pass, not by CanvasKit.
+export interface PDFStructureTag extends PDFTag {
+  children?: PDFStructureTag[];
+  elementIdentifier?: string;
+  headerIdentifiers?: string[];
+  bookmarkTitle?: string;
+  linkUri?: string;
+  linkText?: string;
+  linkDestinationIdentifier?: string;
+  isLinkDestination?: boolean;
+  hiddenCaption?: { text: string; families: string[]; weight: number };
+  renderedBounds?: {
+    pageIndex: number;
+    rect: [number, number, number, number];
+  }[];
+}
+
+export const STRUCTURE_MARKER_OWNER = "html2pdf-skia";
+export const STRUCTURE_MARKER_NAME = "NodeId";
 
 // Predefined special tag IDs from SkPDF
 export const PREDEFINED_TAG_IDS = {
@@ -79,6 +100,8 @@ export const PDF_TAG_ATTRIBUTE = "data-x-pdf-tag-id";
 interface DocumentStructureContext {
   nextId: number;
   tagIdMap: Map<Element, number>;
+  tagMap: Map<Element, PDFStructureTag>;
+  tableHeaders: Map<Element, TableHeaderInfo>;
 }
 
 /**
@@ -266,7 +289,9 @@ function getStructureType(element: Element): string {
     case "samp":
       return PDF_STRUCTURE_TYPES.Code;
     case "a":
-      return PDF_STRUCTURE_TYPES.Link;
+      return element.hasAttribute("href")
+        ? PDF_STRUCTURE_TYPES.Link
+        : PDF_STRUCTURE_TYPES.Span;
     case "ol":
     case "ul":
     case "dl":
@@ -306,40 +331,44 @@ function getStructureType(element: Element): string {
 /**
  * Create attributes for table elements
  */
-function createTableAttributes(element: Element): PDFTagAttribute[] {
+function createTableAttributes(
+  element: Element,
+  context: DocumentStructureContext
+): PDFTagAttribute[] {
   const attributes: PDFTagAttribute[] = [];
   const tagName = element.tagName.toLowerCase();
 
-  if (tagName === "table") {
-    const rows = element.querySelectorAll("tr").length;
-    const cols = Math.max(
-      ...Array.from(element.querySelectorAll("tr")).map(
-        (tr) => tr.children.length
-      )
+  // RowCount and ColCount are not standard PDF table attributes.
+  if (tagName === "th" || tagName === "td") {
+    const cell = element as HTMLTableCellElement;
+    const colspan = cell.colSpan;
+    // HTML rowspan=0 extends to the end of the current row group.
+    const row = cell.parentElement;
+    const rows = row?.parentElement
+      ? Array.from(row.parentElement.children).filter(
+          (child) => child.tagName.toLowerCase() === "tr"
+        )
+      : [];
+    const remaining = row ? rows.length - rows.indexOf(row) : 1;
+    const rowspan = Math.min(
+      cell.rowSpan === 0 ? remaining : cell.rowSpan,
+      remaining
     );
 
-    attributes.push(
-      { owner: "Table", name: "RowCount", type: "int", value: rows },
-      { owner: "Table", name: "ColCount", type: "int", value: cols }
-    );
-  } else if (tagName === "th" || tagName === "td") {
-    const colspan = element.getAttribute("colspan");
-    const rowspan = element.getAttribute("rowspan");
-
-    if (colspan && parseInt(colspan) > 1) {
+    if (colspan > 1) {
       attributes.push({
-        owner: "Cell",
+        owner: "Table",
         name: "ColSpan",
         type: "int",
-        value: parseInt(colspan),
+        value: colspan,
       });
     }
-    if (rowspan && parseInt(rowspan) > 1) {
+    if (rowspan > 1) {
       attributes.push({
-        owner: "Cell",
+        owner: "Table",
         name: "RowSpan",
         type: "int",
-        value: parseInt(rowspan),
+        value: rowspan,
       });
     }
 
@@ -350,10 +379,12 @@ function createTableAttributes(element: Element): PDFTagAttribute[] {
       element.getAttribute("role") === "rowheader"
     ) {
       attributes.push({
-        owner: "Cell",
+        owner: "Table",
         name: "Scope",
         type: "name",
-        value: element.getAttribute("scope") || "Col",
+        value:
+          context.tableHeaders.get(element)?.scope ||
+          (element.getAttribute("role") === "rowheader" ? "Row" : "Column"),
       });
     }
   }
@@ -409,29 +440,51 @@ function createListAttributes(element: Element): PDFTagAttribute[] {
 function createImageAttributes(element: Element): PDFTagAttribute[] {
   const attributes: PDFTagAttribute[] = [];
 
-  if (element.tagName.toLowerCase() === "img") {
-    const img = element as HTMLImageElement;
-
-    if (img.width) {
-      attributes.push({
-        owner: "Image",
-        name: "Width",
-        type: "float",
-        value: img.width,
-      });
-    }
-    if (img.height) {
-      attributes.push({
-        owner: "Image",
-        name: "Height",
-        type: "float",
-        value: img.height,
-      });
-    }
-
-    const placement = element.getAttribute("data-placement") || "Inline";
+  if (
+    ["img", "svg", "canvas", "figure"].includes(element.tagName.toLowerCase())
+  ) {
+    // Dimensions and BBox must use PDF coordinates, not HTML pixel dimensions.
+    // The renderer records them for the final structure pass.
+    const requestedPlacement = element.getAttribute("data-placement");
+    const display =
+      element.ownerDocument.defaultView?.getComputedStyle(element).display;
+    const parentType = element.parentElement
+      ? getStructureType(element.parentElement)
+      : undefined;
+    // CSS block/flex/grid items are standalone graphics. Otherwise retain
+    // inline placement inside text structure, including paragraph SVGs.
+    const blockDisplay = [
+      "block",
+      "flex",
+      "grid",
+      "table",
+      "flow-root",
+    ].includes(display || "");
+    const inlineParent =
+      parentType !== undefined &&
+      [
+        "P",
+        "Span",
+        "Link",
+        "Lbl",
+        "Quote",
+        "Code",
+        "H1",
+        "H2",
+        "H3",
+        "H4",
+        "H5",
+        "H6",
+      ].includes(parentType);
+    const placement =
+      requestedPlacement &&
+      ["Block", "Inline", "Before", "Start", "End"].includes(requestedPlacement)
+        ? requestedPlacement
+        : blockDisplay || !inlineParent
+        ? "Block"
+        : "Inline";
     attributes.push({
-      owner: "Image",
+      owner: "Layout",
       name: "Placement",
       type: "name",
       value: placement,
@@ -442,59 +495,31 @@ function createImageAttributes(element: Element): PDFTagAttribute[] {
 }
 
 /**
- * Create attributes for heading elements
- */
-function createHeadingAttributes(element: Element): PDFTagAttribute[] {
-  const attributes: PDFTagAttribute[] = [];
-  const tagName = element.tagName.toLowerCase();
-
-  if (tagName.match(/^h[1-6]$/)) {
-    const level = parseInt(tagName.charAt(1));
-    attributes.push({
-      owner: "Heading",
-      name: "Level",
-      type: "int",
-      value: level,
-    });
-  }
-
-  return attributes;
-}
-
-/**
  * Create attributes based on element type
  */
-function createElementAttributes(element: Element): PDFTagAttribute[] {
+function createElementAttributes(
+  element: Element,
+  context: DocumentStructureContext
+): PDFTagAttribute[] {
   const attributes: PDFTagAttribute[] = [];
   const tagName = element.tagName.toLowerCase();
 
-  // Common attributes
-  const id = element.id;
-  if (id) {
-    attributes.push({ owner: "Standard", name: "ID", type: "name", value: id });
-  }
+  // /ID is a byte string on the structure element, not a Standard name attribute.
+  // It is written by finalizePDFStructure along with /IDTree and /Headers.
 
-  const className = element.className;
-  if (className) {
-    attributes.push({
-      owner: "Standard",
-      name: "Class",
-      type: "name",
-      value: className,
-    });
-  }
+  // CSS classes belong to the HTML rendering layer, not PDF structure attributes.
+  // CanvasKit writes name attributes verbatim; whitespace in className produces
+  // invalid PDF dictionaries. Leave the DOM classes intact for styling.
 
   // Specific element attributes
   if (
     ["table", "th", "td", "thead", "tbody", "tfoot", "tr"].includes(tagName)
   ) {
-    attributes.push(...createTableAttributes(element));
+    attributes.push(...createTableAttributes(element, context));
   } else if (["ol", "ul", "li"].includes(tagName)) {
     attributes.push(...createListAttributes(element));
   } else if (["img", "figure", "svg", "canvas"].includes(tagName)) {
     attributes.push(...createImageAttributes(element));
-  } else if (tagName.match(/^h[1-6]$/)) {
-    attributes.push(...createHeadingAttributes(element));
   }
 
   return attributes;
@@ -529,7 +554,7 @@ function processElement(
   context.tagIdMap.set(element, tagId);
 
   // Create PDF tag
-  const pdfTag: PDFTag = {
+  const pdfTag: PDFStructureTag = {
     id: tagId,
     type: structureType,
     alt:
@@ -537,9 +562,44 @@ function processElement(
       element.getAttribute("aria-label") ||
       undefined,
     language: element.getAttribute("lang") || undefined,
-    attributes: createElementAttributes(element),
+    attributes: createElementAttributes(element, context),
     children: [],
   };
+  if (/^H[1-6]$/.test(structureType)) {
+    pdfTag.bookmarkTitle =
+      element.textContent?.replace(/\s+/g, " ").trim() || undefined;
+  }
+  // A zero clip hides the caption visually, while its text still names the table.
+  // Native Skia drops all glyphs under that clip; restore invisible text later.
+  if (structureType === PDF_STRUCTURE_TYPES.Caption) {
+    const style = element.ownerDocument.defaultView?.getComputedStyle(element);
+    const text = element.textContent?.replace(/\s+/g, " ").trim();
+    if (
+      style &&
+      text &&
+      !element.children.length &&
+      /^rect\(0px,?\s+0px,?\s+0px,?\s+0px\)$/.test(style.clip)
+    ) {
+      pdfTag.hiddenCaption = {
+        text,
+        families: style.fontFamily
+          .split(",")
+          .map((family) => family.trim().replace(/^["']|["']$/g, "")),
+        weight: Number.parseInt(style.fontWeight, 10) || 400,
+      };
+    }
+  }
+  if (
+    structureType === PDF_STRUCTURE_TYPES.Link &&
+    element.hasAttribute("href")
+  ) {
+    pdfTag.linkUri = (element as HTMLAnchorElement).href;
+    pdfTag.linkText =
+      element.getAttribute("aria-label") ||
+      element.textContent?.replace(/\s+/g, " ").trim() ||
+      pdfTag.linkUri;
+  }
+  context.tagMap.set(element, pdfTag);
 
   // Process child elements
   const childElements = Array.from(element.children);
@@ -566,6 +626,65 @@ export function generateDocumentStructure(htmlElement: Element | Element[]): {
   const context: DocumentStructureContext = {
     nextId: 1, // Start from 1, as 0 is reserved for Nothing
     tagIdMap: new Map(),
+    tagMap: new Map(),
+    tableHeaders: new Map(),
+  };
+  for (const root of Array.isArray(htmlElement) ? htmlElement : [htmlElement]) {
+    for (const [cell, info] of resolveTableHeaders(root))
+      context.tableHeaders.set(cell, info);
+  }
+
+  const finalizeTags = () => {
+    for (const [element, tag] of context.tagMap) {
+      const href = element.getAttribute("href");
+      if (!tag.linkUri || !href?.startsWith("#")) continue;
+      const target =
+        href === "#"
+          ? element.ownerDocument.documentElement
+          : element.ownerDocument.getElementById(
+              decodeURIComponent(href.slice(1))
+            );
+      const targetTag = target ? context.tagMap.get(target) : undefined;
+      if (!targetTag)
+        throw new Error(`Missing internal PDF link destination '${href}'`);
+      targetTag.isLinkDestination = true;
+      tag.linkDestinationIdentifier = `html2pdf-${targetTag.id}`;
+    }
+    for (const [element, tag] of context.tagMap) {
+      if (
+        element.id ||
+        tag.type === PDF_STRUCTURE_TYPES.TH ||
+        tag.type === PDF_STRUCTURE_TYPES.Figure ||
+        tag.bookmarkTitle ||
+        tag.hiddenCaption ||
+        tag.linkUri ||
+        tag.isLinkDestination
+      ) {
+        // Internal identifiers remain unique even when separate HTML pages reuse IDs.
+        tag.elementIdentifier = `html2pdf-${tag.id}`;
+      }
+      const headers = context.tableHeaders.get(element)?.headers || [];
+      if (headers.length) {
+        tag.headerIdentifiers = headers.map((header) => {
+          const headerTag = context.tagMap.get(header);
+          if (!headerTag || headerTag.type !== PDF_STRUCTURE_TYPES.TH)
+            throw new Error(
+              "A table header is excluded from the PDF structure"
+            );
+          return `html2pdf-${headerTag.id}`;
+        });
+      }
+      if (tag.elementIdentifier || tag.headerIdentifiers) {
+        if (tag.id === undefined)
+          throw new Error("Missing PDF structure node ID");
+        tag.attributes?.push({
+          owner: STRUCTURE_MARKER_OWNER,
+          name: STRUCTURE_MARKER_NAME,
+          type: "int",
+          value: tag.id,
+        });
+      }
+    }
   };
 
   // Handle array of elements
@@ -584,6 +703,7 @@ export function generateDocumentStructure(htmlElement: Element | Element[]): {
       }
     }
 
+    finalizeTags();
     return {
       structure: parentTag,
       tagIdMap: context.tagIdMap,
@@ -605,6 +725,7 @@ export function generateDocumentStructure(htmlElement: Element | Element[]): {
     };
   }
 
+  finalizeTags();
   return {
     structure: documentStructure,
     tagIdMap: context.tagIdMap,
@@ -626,9 +747,10 @@ export function applyPDFStructureToDocument(document: Document): {
  * Get PDF tag for specific HTML element
  */
 export function getPDFTagForElement(element: Element): number | undefined {
-  element.getAttribute(PDF_TAG_ATTRIBUTE);
-  const match = element.getAttribute(PDF_TAG_ATTRIBUTE)?.match(/(\d+)/);
-  return match ? Number(match[1]) : undefined;
+  const value = element.getAttribute(PDF_TAG_ATTRIBUTE);
+  // Preserve negative Skia artifact IDs. An unsigned regex converted -6 to 6,
+  // accidentally associating decorative elements with real structure nodes.
+  return value !== null && /^-?\d+$/.test(value) ? Number(value) : undefined;
 }
 
 export function getPDFTagForElementFromMap(

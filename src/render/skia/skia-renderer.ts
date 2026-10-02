@@ -83,6 +83,7 @@ import { TextShadow } from "../../css/property-descriptors/text-shadow";
 import { Context } from "../../core/context";
 import { SkiaFontCollection } from "../../fonts/font-collection";
 import { createSkiaFont } from "./skia-font";
+import { PREDEFINED_TAG_IDS } from "../../pdf/document-structure";
 
 export interface CanvasKitConfig {
   canvasKit: CanvasKit;
@@ -97,6 +98,8 @@ export interface SkiaRenderOptions {
   height: number;
   backgroundColor: Color | null;
   fontCollection: SkiaFontCollection;
+  document?: Document;
+  onElementContent?: (tagId: number, corners: number[]) => void;
 }
 
 const MASK_OFFSET = 10000;
@@ -134,7 +137,7 @@ export class SkiaRenderer {
   ) {
     this.canvas = ckConfig.canvas;
     this.canvasKit = ckConfig.canvasKit;
-    this.fontMetrics = new FontMetrics(document);
+    this.fontMetrics = new FontMetrics(options.document ?? document);
     this.canvas.scale(options.scale, options.scale);
     this.canvas.translate(-options.x, -options.y);
     this._activeEffects = [];
@@ -314,7 +317,8 @@ export class SkiaRenderer {
 
   renderTextNode(text: TextContainer, styles: CSSParsedDeclaration): void {
     const font = createSkiaFont(styles, this.options.fontCollection);
-    const { baseline, middle } = this.fontMetrics.getMetrics(
+    const baseline = -font.getMetrics().ascent;
+    const { middle } = this.fontMetrics.getMetrics(
       styles.fontFamily.join(", "),
       styles.fontSize.number.toString()
     );
@@ -479,6 +483,26 @@ export class SkiaRenderer {
     this.applyEffects(paint.getEffects(4 /* EffectTarget.CONTENT */));
     const container = paint.container;
     const styles = container.styles;
+    if (container.pdfTagNodeId && this.options.onElementContent) {
+      const box =
+        container instanceof ImageElementContainer
+          ? contentBox(container)
+          : container.bounds;
+      const corners = this.canvasKit.Matrix.mapPoints(
+        this.canvas.getTotalMatrix(),
+        [
+          box.left,
+          box.top,
+          box.left + box.width,
+          box.top,
+          box.left + box.width,
+          box.top + box.height,
+          box.left,
+          box.top + box.height,
+        ]
+      );
+      this.options.onElementContent(container.pdfTagNodeId, corners);
+    }
     if (container.pdfTagNodeId) {
       this.canvasKit.SetPDFTagId(this.canvas, container.pdfTagNodeId);
     }
@@ -517,8 +541,15 @@ export class SkiaRenderer {
     if (container instanceof SVGElementContainer) {
       try {
         const cachedSvg = await this.context.cache.match(container.svg);
-        // For SVG, we need to get the actual SVG element
-        if (cachedSvg && cachedSvg instanceof SVGElement) {
+        // The image cache decodes SVG data URLs into HTMLImageElement.
+        if (cachedSvg instanceof HTMLImageElement) {
+          const skiaImage = this.convertCanvasImageSourceToSkia(cachedSvg);
+          if (skiaImage) {
+            const curves = new BoundCurves(container);
+            this.renderReplacedElement(container, curves, skiaImage);
+            skiaImage.delete();
+          }
+        } else if (cachedSvg && cachedSvg instanceof SVGElement) {
           const skiaImage = await this.convertSvgToSkia(cachedSvg);
           if (skiaImage) {
             const curves = new BoundCurves(container);
@@ -652,10 +683,7 @@ export class SkiaRenderer {
 
     if (isTextInputElement(container) && container.value.length) {
       const font = createSkiaFont(styles, this.options.fontCollection);
-      const { baseline } = this.fontMetrics.getMetrics(
-        styles.fontFamily.join(", "),
-        styles.fontSize.number.toString()
-      );
+      const baseline = -font.getMetrics().ascent;
 
       const paint = this.createPaint("fill");
       paint.setColor(this.parseColorWithAlpha(styles.color));
@@ -1093,6 +1121,9 @@ export class SkiaRenderer {
   }
 
   async renderNodeBackgroundAndBorders(paint: ElementPaint): Promise<void> {
+    // Backgrounds, borders and shadows decorate the content; they must not
+    // be left unmarked or be mistaken for a table cell's actual content.
+    this.canvasKit.SetPDFTagId(this.canvas, PREDEFINED_TAG_IDS.LayoutArtifact);
     this.applyEffects(
       paint.getEffects(2 /* EffectTarget.BACKGROUND_BORDERS */)
     );
@@ -1256,6 +1287,7 @@ export class SkiaRenderer {
       }
       side++;
     }
+    this.canvasKit.SetPDFTagId(this.canvas, PREDEFINED_TAG_IDS.Nothing);
   }
 
   renderDashedDottedBorder(
@@ -1465,6 +1497,10 @@ export class SkiaRenderer {
 
   async render(element: ElementContainer): Promise<void> {
     if (this.options.backgroundColor) {
+      this.canvasKit.SetPDFTagId(
+        this.canvas,
+        PREDEFINED_TAG_IDS.BackgroundArtifact
+      );
       const bgPaint = this.createPaint("fill");
       bgPaint.setColor(this.parseColorWithAlpha(this.options.backgroundColor));
 
@@ -1479,6 +1515,7 @@ export class SkiaRenderer {
       );
 
       bgPaint.delete();
+      this.canvasKit.SetPDFTagId(this.canvas, PREDEFINED_TAG_IDS.Nothing);
     }
 
     const stack = parseStackingContexts(element);

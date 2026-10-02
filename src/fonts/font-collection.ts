@@ -68,6 +68,21 @@ export class SkiaFontCollection implements IFontCollection {
     this.defaultFonts.set(fontFamilyClass, families);
   }
 
+  getFontData(families: string[], weight: number): ArrayBuffer | undefined {
+    for (const family of families) {
+      const candidates = this.fonts.filter(
+        (font) => font.family.toLowerCase() === family.toLowerCase()
+      );
+      candidates.sort(
+        (a, b) =>
+          Math.abs((a.style.fontWeight || 400) - weight) -
+          Math.abs((b.style.fontWeight || 400) - weight)
+      );
+      if (candidates.length) return candidates[0].buffer;
+    }
+    return undefined;
+  }
+
   setFallbackFonts(
     unicodeCharacterBucket: UnicodeCharacterBucket,
     families: string[]

@@ -24,7 +24,9 @@ export class FontMetrics {
 
     container.style.visibility = "hidden";
     container.style.fontFamily = fontFamily;
-    container.style.fontSize = fontSize;
+    container.style.fontSize = /^\d+(\.\d+)?$/.test(fontSize)
+      ? `${fontSize}px`
+      : fontSize;
     container.style.margin = "0";
     container.style.padding = "0";
     container.style.whiteSpace = "nowrap";
@@ -40,7 +42,7 @@ export class FontMetrics {
     img.style.verticalAlign = "baseline";
 
     span.style.fontFamily = fontFamily;
-    span.style.fontSize = fontSize;
+    span.style.fontSize = container.style.fontSize;
     span.style.margin = "0";
     span.style.padding = "0";
 

@@ -73,9 +73,11 @@
     "prepare": "if [ \"$SKIP_PREPARE\" != \"true\" ]; then husky install; fi"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "@rollerbird/canvaskit-wasm-pdf": "file:deps/rollerbird-canvaskit-wasm-pdf-0.1.3.tgz",
     "css-line-break": "^2.1.0",
     "emoji-regex-xs": "^2.0.1",
+    "pdf-lib": "^1.17.1",
     "text-segmentation": "^1.0.3"
   },
   "bundleDependencies": [
