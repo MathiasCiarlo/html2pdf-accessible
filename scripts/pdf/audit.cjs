@@ -184,8 +184,23 @@ async function audit(filename, variant, browserFields) {
       assert.equal(name(page, "Tabs"), "/S");
       assert(annotation.has(key("Contents")));
       assert(annotation.has(key("A")) || annotation.has(key("Dest")));
+      if (variant === "discount") {
+        const destination = annotation.lookup(key("Dest"), PDFArray);
+        assert.equal(destination.get(0), pdf.getPages()[0].ref);
+        assert.equal(destination.lookup(2, PDFNumber).asNumber(), 0);
+        assert.equal(destination.lookup(3, PDFNumber).asNumber(), 842);
+        assert(
+          !annotation.has(key("A")),
+          "Top link must use a PDF destination"
+        );
+      }
     }
   }
+  if (variant === "discount")
+    assert(
+      nodes.some((node) => name(node, "S") === "/Link"),
+      "Missing top link"
+    );
   assert.equal(string(pdf.catalog.get(key("Lang"))), "nb-NO");
   for (const page of pdf.getPages()) {
     assert.equal(page.getWidth(), 595);

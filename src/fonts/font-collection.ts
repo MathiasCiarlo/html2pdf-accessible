@@ -69,7 +69,13 @@ export class SkiaFontCollection implements IFontCollection {
   }
 
   getFontData(families: string[], weight: number): ArrayBuffer | undefined {
-    for (const family of families) {
+    const resolvedFamilies = [
+      ...families,
+      ...this.getFallbackFontFamilies(
+        families.map((family) => family.toLowerCase() as FontFamilyClass)
+      ),
+    ];
+    for (const family of resolvedFamilies) {
       const candidates = this.fonts.filter(
         (font) => font.family.toLowerCase() === family.toLowerCase()
       );

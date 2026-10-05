@@ -131,6 +131,41 @@ describe("Text and link structure", () => {
     expect(children.lookup(2, PDFDict).get(key("Pg"))).toEqual(pages[1].ref);
   });
 
+  it("links an empty fragment on a later page to the first page without rendered root bounds", async () => {
+    document.body.innerHTML = '<p><a href="#">Back to top</a></p>';
+    const structure = generateDocumentStructure(document.documentElement)
+      .structure as PDFStructureTag;
+    const collect = (tag: PDFStructureTag): PDFStructureTag[] => [
+      tag,
+      ...(tag.children || []).flatMap(collect),
+    ];
+    const linkTag = collect(structure).find((tag) => tag.type === "Link");
+    if (!linkTag || linkTag.id === undefined)
+      throw new Error("Missing link tag");
+    expect(linkTag.linkToPageTop).toBe(true);
+    const pdf = await PDFDocument.create();
+    const first = pdf.addPage([595, 842]);
+    const second = pdf.addPage([595, 842]);
+    linkTag.renderedBounds = [{ pageIndex: 1, rect: [10, 700, 100, 720] }];
+    const node = pdf.context.obj({ Type: "StructElem", S: "Link", K: 0 });
+    const ref = pdf.context.register(node);
+    addLinkAnnotations(
+      pdf,
+      pdf.context.obj({}),
+      [{ tag: linkTag, node, ref }],
+      new Map([[linkTag.id, linkTag]])
+    );
+    const annotation = second.node
+      .lookup(PDFName.of("Annots"), PDFArray)
+      .lookup(0, PDFDict);
+    const destination = annotation.lookup(PDFName.of("Dest"), PDFArray);
+    expect(destination.get(0)).toEqual(first.ref);
+    expect(destination.lookup(2, PDFNumber).asNumber()).toBe(0);
+    expect(destination.lookup(3, PDFNumber).asNumber()).toBe(842);
+    expect(annotation.has(PDFName.of("A"))).toBe(false);
+    expect(node.lookup(PDFName.of("K"), PDFArray).size()).toBe(2);
+  });
+
   it("uses a page destination instead of a localhost URI for internal links", async () => {
     document.body.innerHTML =
       '<p><a href="#target">Detaljer</a></p><section id="target">Innhold</section>';

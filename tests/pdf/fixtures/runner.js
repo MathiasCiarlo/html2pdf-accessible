@@ -26,7 +26,7 @@ const rows = (count) =>
       }</tr>`
   ).join("");
 const table = (count) =>
-  `<table class="products multiple-classes"><caption class="sr-only" data-v-1a2b3c="">Items in this quotation</caption><thead><tr><th scope="col">Item</th><th scope="col">Price</th><th scope="col">Unit price</th>${
+  `<table class="products multiple-classes"><caption class="sr-only" style="font-family:sans-serif;font-weight:600" data-v-1a2b3c="">Items in this quotation</caption><thead><tr><th scope="col">Item</th><th scope="col">Price</th><th scope="col">Unit price</th>${
     discounted ? '<th scope="col">Discount</th>' : ""
   }</tr></thead><tbody>${rows(count)}</tbody></table>`;
 const metadata = `<section class="metadata" aria-label="Quotation information"><div><p>Prepared for</p><span id="customer" data-v-1a2b3c="">Example Customer with a longer name</span></div><div><p>Date</p><span>01.01.2026</span></div><div><p>Valid until</p><span>31.12.2026</span></div><div><p>Contact</p><span id="contact">Example Contact in Customer Services</span></div></section>`;
@@ -42,7 +42,9 @@ const articles = long
           variant === "minimal" ? 4 : 7
         )}<footer><p>Example document – page ${i + 1}</p>${
           i === 2
-            ? '<p><a href="https://example.com/contact">Contact information</a></p>'
+            ? `<p><a href="${
+                variant === "discount" ? "#" : "https://example.com/contact"
+              }">Contact information</a></p>`
             : ""
         }</footer></article>`
     ).join("");

@@ -40,7 +40,8 @@ export function addLinkAnnotations(
   );
   for (const { tag, node, ref } of links) {
     const uri = tag.linkUri ? safeExternalLinkUri(tag.linkUri) : undefined;
-    if (!tag.linkDestinationIdentifier && !uri) {
+    const internal = tag.linkToPageTop || tag.linkDestinationIdentifier;
+    if (!internal && !uri) {
       node.set(key("S"), key("Span"));
       continue;
     }
@@ -56,11 +57,23 @@ export function addLinkAnnotations(
         Border: [0, 0, 0],
         StructParent: nextKey,
         Contents: PDFHexString.fromText(tag.linkText || uri || ""),
-        ...(uri && !tag.linkDestinationIdentifier
+        ...(uri && !internal
           ? { A: { S: "URI", URI: PDFString.of(uri) } }
           : {}),
       });
-      if (tag.linkDestinationIdentifier) {
+      if (tag.linkToPageTop) {
+        const firstPage = pdf.getPages()[0];
+        annotation.set(
+          key("Dest"),
+          pdf.context.obj([
+            firstPage.ref,
+            "XYZ",
+            0,
+            firstPage.getHeight(),
+            null,
+          ])
+        );
+      } else if (tag.linkDestinationIdentifier) {
         const target = Array.from(tags.values()).find(
           (candidate) =>
             candidate.elementIdentifier === tag.linkDestinationIdentifier

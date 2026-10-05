@@ -11,6 +11,7 @@ export interface PDFStructureTag extends PDFTag {
   linkUri?: string;
   linkText?: string;
   linkDestinationIdentifier?: string;
+  linkToPageTop?: boolean;
   isLinkDestination?: boolean;
   hiddenCaption?: { text: string; families: string[]; weight: number };
   renderedBounds?: {
@@ -142,8 +143,13 @@ function shouldSkipElement(element: Element): boolean {
     return true;
   }
 
-  // Skip elements with presentation role (not content)
-  if (role === "presentation" || role === "none") {
+  // Decorative graphics need an artifact tag so their painted content is
+  // accounted for; other presentational elements keep the existing behavior.
+  if (
+    (role === "presentation" || role === "none") &&
+    tagName !== "img" &&
+    tagName !== "svg"
+  ) {
     return true;
   }
 
@@ -159,6 +165,30 @@ function shouldSkipElement(element: Element): boolean {
  * Determine if element should be treated as artifact (decorative/non-content)
  */
 function isArtifactElement(element: Element): boolean {
+  const tagName = element.tagName.toLowerCase();
+  const role = element.getAttribute("role");
+  const hasAccessibleName =
+    !!element.getAttribute("aria-label")?.trim() ||
+    !!element.getAttribute("aria-labelledby")?.trim();
+  if (
+    (tagName === "img" || tagName === "svg") &&
+    (element.getAttribute("aria-hidden") === "true" ||
+      (!hasAccessibleName && (role === "presentation" || role === "none")))
+  ) {
+    return true;
+  }
+
+  // An explicit empty alt marks a decorative image. Keep it in the rendered
+  // page, but omit it from the logical Figure structure.
+  if (
+    tagName === "img" &&
+    element.getAttribute("alt") === "" &&
+    role !== "img" &&
+    !hasAccessibleName
+  ) {
+    return true;
+  }
+
   const classList = element.classList;
 
   // Common CSS classes that indicate decorative elements
@@ -606,6 +636,15 @@ function processElement(
   }
   context.tagMap.set(element, pdfTag);
 
+  // The whole graphic is decorative; SVG descendants must not re-enter the
+  // logical structure as independent tags.
+  if (
+    structureType === PDF_STRUCTURE_TYPES.Artifact &&
+    element.tagName.toLowerCase() === "svg"
+  ) {
+    return pdfTag;
+  }
+
   // Process child elements
   const childElements = Array.from(element.children);
   for (const child of childElements) {
@@ -643,12 +682,13 @@ export function generateDocumentStructure(htmlElement: Element | Element[]): {
     for (const [element, tag] of context.tagMap) {
       const href = element.getAttribute("href")?.trim();
       if (!tag.linkUri || !href?.startsWith("#")) continue;
-      const target =
-        href === "#"
-          ? element.ownerDocument.documentElement
-          : element.ownerDocument.getElementById(
-              decodeURIComponent(href.slice(1))
-            );
+      if (href === "#") {
+        tag.linkToPageTop = true;
+        continue;
+      }
+      const target = element.ownerDocument.getElementById(
+        decodeURIComponent(href.slice(1))
+      );
       const targetTag = target ? context.tagMap.get(target) : undefined;
       if (!targetTag)
         throw new Error(`Missing internal PDF link destination '${href}'`);

@@ -29,6 +29,44 @@ function fixture(html: string): HTMLElement {
 }
 
 describe("PDF document structure", () => {
+  it("renders an explicitly decorative image as an artifact", () => {
+    const root = fixture(
+      '<div><img alt="" src="decoration.svg"><img src="missing-alt.svg"><img alt="" aria-label="Meaningful image" src="named.svg"></div>'
+    );
+    const { structure } = generateDocumentStructure(root);
+    const images = root.querySelectorAll("img");
+    const tags = structure.children?.[0].children as PDFStructureTag[];
+    expect(tags[0].type).toBe("Artifact");
+    expect(tags[0].id).toBeLessThan(0);
+    expect(getPDFTagForElement(images[0])).toBe(tags[0].id);
+    expect(images[0].getAttribute("alt")).toBe("");
+    expect(tags[1].type).toBe("Figure");
+    expect(tags[1].alt).toBeUndefined();
+    expect(tags[2].type).toBe("Figure");
+    expect(tags[2].alt).toBe("Meaningful image");
+  });
+
+  it("treats decorative SVGs as artifacts without tagging their children", () => {
+    const root = fixture(
+      '<div><svg aria-hidden="true"><title>Decoration</title><path></path></svg><svg role="presentation"><circle></circle></svg><svg role="img" aria-label="Chart"><path></path></svg><svg role="presentation" aria-label="Named graphic"></svg></div>'
+    );
+    const { structure } = generateDocumentStructure(root);
+    const svgs = root.querySelectorAll("svg");
+    const tags = structure.children?.[0].children as PDFStructureTag[];
+    expect(tags.map((tag) => tag.type)).toEqual([
+      "Artifact",
+      "Artifact",
+      "Figure",
+      "Figure",
+    ]);
+    expect(tags[0].children).toEqual([]);
+    expect(tags[1].children).toEqual([]);
+    expect(getPDFTagForElement(svgs[0])).toBe(tags[0].id);
+    expect(getPDFTagForElement(svgs[1])).toBe(tags[1].id);
+    expect(tags[2].alt).toBe("Chart");
+    expect(tags[3].alt).toBe("Named graphic");
+  });
+
   it("distinguishes standalone figures from inline text illustrations", () => {
     const root = fixture(
       '<div><img alt="Product"><svg aria-label="Logo"></svg><canvas></canvas></div><p>Text <img alt="Inline"><svg aria-label="Inline SVG"></svg></p><div><img data-placement="Inline" alt="Override"></div>'
