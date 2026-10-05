@@ -63,7 +63,9 @@ export async function restoreHiddenCaptions(
       );
     let font = embedded.get(buffer);
     if (!font) {
-      font = await pdf.embedFont(buffer, { subset: true });
+      // fontkit's tiny subset for these captions fails to load in Acrobat.
+      // Embed the complete source font; the text remains invisible (Tr 3).
+      font = await pdf.embedFont(buffer, { subset: false });
       embedded.set(buffer, font);
     }
     const page = pdf
