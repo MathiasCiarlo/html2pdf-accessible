@@ -214,3 +214,7 @@ in the npm package. See [backend details](deps/canvaskit-pdf/README.md).
 ### Contributions
 
 Do not add production snapshots, customer data or proprietary assets to tests.
+
+Pushes to `main` publish to npm only when the package version changes and all CI
+checks pass. See the [publishing setup](https://github.com/MathiasCiarlo/html2pdf-accessible/blob/main/docs/publishing.md)
+for versioning and npm Trusted Publishing configuration.

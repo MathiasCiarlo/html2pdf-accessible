@@ -164,6 +164,13 @@ void exportDocument;
     await new Promise((resolve) => server.close(resolve));
   }
   await run(path.join(packageRoot, "lib"));
+  // Publish the exact archive installed and exercised above, without repacking.
+  const releaseDirectory = path.join(root, ".cache/npm-package");
+  await fs.mkdir(releaseDirectory, { recursive: true });
+  await fs.copyFile(
+    path.join(temporary, packs[0].filename),
+    path.join(releaseDirectory, "package.tgz")
+  );
   console.log(
     "Packed package installs, imports, exposes declarations/WASM and exports all browser fixtures"
   );
