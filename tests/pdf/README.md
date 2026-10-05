@@ -39,6 +39,12 @@ CI never updates references automatically. No online validator receives PDFs.
 allowances were removed after the repository-wide lint cleanup.
 Set `LINT_BASE` to the comparison commit in CI.
 
+The package smoke test installs the tarball in a consumer project, resolves its
+WebGPU types within that installation and compiles the public API with
+`skipLibCheck: false`. Browser fixtures also cover configured generic font
+families for hidden captions and a `href="#"` link from a later page to page one.
+Generated reports belong in ignored `.cache/` or `output/`, never in Git.
+
 ## Manual release checks
 
 Open synthetic quote/long-table PDFs in PAC and inspect PDF/UA, WCAG and Quality.
