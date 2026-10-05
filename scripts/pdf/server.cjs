@@ -5,6 +5,7 @@ const root = path.resolve(__dirname, "../..");
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript",
+  ".mjs": "text/javascript",
   ".wasm": "application/wasm",
   ".ttf": "font/ttf",
   ".svg": "image/svg+xml",

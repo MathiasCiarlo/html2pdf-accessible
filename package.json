@@ -1,10 +1,19 @@
 {
-  "name": "html2pdf-skia",
+  "name": "html2pdf-accessible",
   "description": "Accessible PDF generation using Skia. Supports vector graphics, text selection, and screen readers.",
-  "main": "lib/html2pdf-skia.cjs.js",
-  "module": "lib/html2pdf-skia.esm.js",
+  "main": "lib/html2pdf-accessible.cjs.js",
+  "module": "lib/html2pdf-accessible.esm.mjs",
   "typings": "lib/types/index.d.ts",
-  "browser": "lib/html2pdf-skia.js",
+  "browser": "lib/html2pdf-accessible.js",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "import": "./lib/html2pdf-accessible.esm.mjs",
+      "require": "./lib/html2pdf-accessible.cjs.js"
+    },
+    "./lib/*": "./lib/*",
+    "./package.json": "./package.json"
+  },
   "version": "0.1.4",
   "author": {
     "name": "pushpagarwal",
@@ -21,20 +30,29 @@
     "skia"
   ],
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=22.0.0"
   },
   "files": [
     "lib/",
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "deps/",
+    "deps/canvaskit-pdf/package.json",
+    "deps/canvaskit-pdf/bin/canvaskit.js",
+    "deps/canvaskit-pdf/types",
+    "deps/canvaskit-pdf/LICENSE",
+    "deps/canvaskit-pdf/THIRD_PARTY_LICENSES.txt",
+    "deps/canvaskit-pdf/provenance.json",
+    "deps/canvaskit-pdf/README.md",
+    "deps/canvaskit-pdf/pdf_bindings.cpp",
+    "deps/canvaskit-pdf/CHROMIUM-LICENSE",
+    "deps/canvaskit-pdf/chromium-license-source.json",
     "scripts/canvaskit/"
   ],
-  "homepage": "https://github.com/pushpagarwal/html2pdf-skia",
+  "homepage": "https://github.com/MathiasCiarlo/html2pdf-accessible",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pushpagarwal/html2pdf-skia"
+    "url": "https://github.com/MathiasCiarlo/html2pdf-accessible.git"
   },
   "devDependencies": {
     "@napi-rs/canvas": "0.1.80",
@@ -90,12 +108,13 @@
     "verify:canvaskit": "node scripts/canvaskit/verify.cjs"
   },
   "dependencies": {
+    "@html2pdf-skia/canvaskit-pdf": "file:deps/canvaskit-pdf",
     "@pdf-lib/fontkit": "^1.1.1",
+    "@webgpu/types": "0.1.69",
     "css-line-break": "^2.1.0",
     "emoji-regex-xs": "^2.0.1",
     "pdf-lib": "^1.17.1",
-    "text-segmentation": "^1.0.3",
-    "@html2pdf-skia/canvaskit-pdf": "file:deps/canvaskit-pdf"
+    "text-segmentation": "^1.0.3"
   },
   "bundleDependencies": [
     "@html2pdf-skia/canvaskit-pdf"

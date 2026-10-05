@@ -41,6 +41,13 @@ async function packageTest() {
     )
   );
   assert.equal(packs.length, 1);
+  assert.deepEqual(
+    packs[0].files
+      .filter((file) => file.path.endsWith(".wasm"))
+      .map((file) => file.path),
+    ["lib/wasm/canvaskit-pdf.wasm"],
+    "The published package must contain exactly one WASM file"
+  );
   for (const file of packs[0].files) {
     assert(
       !file.path.endsWith(".tgz"),
@@ -91,6 +98,49 @@ async function packageTest() {
     packageRoot,
     "scripts/canvaskit/verify.cjs"
   )).verify();
+  const webGpuTypes = require.resolve("@webgpu/types/package.json", {
+    paths: [packageRoot],
+  });
+  assert(
+    webGpuTypes.startsWith(temporary + path.sep),
+    "Consumer types must resolve inside the installed consumer project"
+  );
+  await fs.writeFile(
+    path.join(temporary, "consumer.ts"),
+    `import { loadCanvasKit, createFontCollection, exportHTMLDocumentToPdf } from "${packs[0].name}";
+async function exportDocument(document: Document) {
+  const kit = await loadCanvasKit({ wasmBinaryUrl: "/canvaskit-pdf.wasm" });
+  const fonts = createFontCollection(kit);
+  return exportHTMLDocumentToPdf(kit, document, { fontCollection: fonts });
+}
+void exportDocument;
+`
+  );
+  await fs.writeFile(
+    path.join(temporary, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        strict: true,
+        skipLibCheck: false,
+        noEmit: true,
+        target: "ES2020",
+        module: "Node16",
+        moduleResolution: "Node16",
+        lib: ["ES2020", "DOM"],
+        types: [],
+      },
+      files: ["consumer.ts"],
+    })
+  );
+  const typecheck = spawnSync(
+    process.execPath,
+    [require.resolve("typescript/bin/tsc"), "-p", temporary],
+    { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 }
+  );
+  if (typecheck.error || typecheck.status !== 0)
+    throw new Error(
+      typecheck.error?.message || typecheck.stdout + typecheck.stderr
+    );
   const server = createServer(path.join(packageRoot, "lib"));
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   let browser;
@@ -101,7 +151,7 @@ async function packageTest() {
       `http://127.0.0.1:${server.address().port}/tests/pdf/fixtures/index.html`
     );
     const imported = await page.evaluate(async () => {
-      const library = await import("/lib/html2pdf-skia.esm.js");
+      const library = await import("/lib/html2pdf-accessible.esm.mjs");
       return [
         "exportHTMLDocumentToPdf",
         "loadCanvasKit",

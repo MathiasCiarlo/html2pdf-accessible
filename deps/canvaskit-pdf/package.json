@@ -6,7 +6,7 @@
   "types": "types/index.d.ts",
   "license": "BSD-3-Clause AND MIT",
   "files": [
-    "bin",
+    "bin/canvaskit.js",
     "types",
     "LICENSE",
     "THIRD_PARTY_LICENSES.txt",

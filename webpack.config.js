@@ -40,7 +40,7 @@ const baseConfig = {
 const umdConfig = {
   ...baseConfig,
   output: {
-    filename: "html2pdf-skia.js",
+    filename: "html2pdf-accessible.js",
     path: path.resolve(__dirname, "lib"),
     library: "html2pdf",
     libraryTarget: "umd",
@@ -53,7 +53,7 @@ const umdConfig = {
 const umdMinConfig = {
   ...baseConfig,
   output: {
-    filename: "html2pdf-skia.min.js",
+    filename: "html2pdf-accessible.min.js",
     path: path.resolve(__dirname, "lib"),
     library: "html2pdf",
     libraryTarget: "umd",
@@ -79,7 +79,7 @@ const umdMinConfig = {
 const esmConfig = {
   ...baseConfig,
   output: {
-    filename: "html2pdf-skia.esm.js",
+    filename: "html2pdf-accessible.esm.mjs",
     path: path.resolve(__dirname, "lib"),
     library: {
       type: "module",
@@ -95,7 +95,7 @@ const esmConfig = {
 const cjsConfig = {
   ...baseConfig,
   output: {
-    filename: "html2pdf-skia.cjs.js",
+    filename: "html2pdf-accessible.cjs.js",
     path: path.resolve(__dirname, "lib"),
     libraryTarget: "commonjs2",
   },

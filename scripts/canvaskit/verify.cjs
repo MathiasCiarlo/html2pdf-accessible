@@ -57,14 +57,21 @@ async function verify(output) {
     digest(await fs.readFile(path.join(backend, "CHROMIUM-LICENSE"))),
     chromium.sha256
   );
-  for (const file of ["canvaskit.js", "canvaskit.wasm"])
+  for (const file of ["canvaskit.js", "canvaskit.wasm"]) {
+    let artifact = path.join(output || path.join(backend, "bin"), file);
+    if (!output && file.endsWith(".wasm")) {
+      try {
+        await fs.access(artifact);
+      } catch {
+        artifact = path.join(root, "lib/wasm/canvaskit-pdf.wasm");
+      }
+    }
     assert.equal(
-      digest(
-        await fs.readFile(path.join(output || path.join(backend, "bin"), file))
-      ),
+      digest(await fs.readFile(artifact)),
       manifest.artifacts[file],
       `Artifact checksum mismatch: ${file}`
     );
+  }
   console.log("CanvasKit source manifest and artifact checksums verified");
 }
 module.exports = { verify };
