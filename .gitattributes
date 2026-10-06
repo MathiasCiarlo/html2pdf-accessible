@@ -1,3 +1,4 @@
+* text=auto eol=lf
 scripts/canvaskit/** text eol=lf
 deps/canvaskit-pdf/** text eol=lf
 deps/canvaskit-pdf/bin/*.wasm binary
