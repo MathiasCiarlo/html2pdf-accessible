@@ -20,27 +20,6 @@ the exact archive it installed and exercised to `.cache/npm-package/package.tgz`
 CI uploads this archive and the publish job downloads it without rebuilding or
 repacking. No publishing credentials are made available to the test jobs.
 
-## One-time setup
-
-1. Ensure you own the npm name `html2pdf-accessible`. If the package has not yet
-   been published, make the initial publication from a tested archive using an
-   authenticated maintainer account before configuring its npm package settings.
-2. In GitHub repository settings, create the deployment environment `npm` and
-   allow deployments only from `main`. Do not require manual deployment approval
-   if every version change on `main` should publish automatically.
-3. In the npm package's **Settings → Trusted publishing**, add GitHub Actions:
-
-   | Field                | Value                                |
-   | -------------------- | ------------------------------------ |
-   | Organization or user | `MathiasCiarlo`                      |
-   | Repository           | `html2pdf-accessible`                |
-   | Workflow filename    | `pdf-tests.yml`                      |
-   | Environment          | `npm`                                |
-   | Allowed action       | Direct publishing with `npm publish` |
-
-4. Keep `package.json`'s repository URL consistent with the GitHub repository.
-   Protect `main` with required CI checks and prohibit force pushes.
-
 The publish job uses GitHub-hosted Ubuntu, Node 24 and npm 11.21.0. Its only
 additional permission is `id-token: write`, used for npm's short-lived OIDC
 credentials. An `NPM_TOKEN` secret is unnecessary. Actions are pinned to commit
