@@ -16,6 +16,10 @@ regression cases. The download button is outside the exported iframe document.
 4. veraPDF validates with `-f ua1`. Wrapper tests reject missing/malformed XML,
    noncompliance, parser failures, wrong profiles and incomplete jobs.
 
+The minimal fixture is also exported with decorative images and SVGs. Its PDF
+must keep the graphics visible while excluding them from the structure tree and
+omitting MCIDs from artifact sequences. veraPDF validates this export as well.
+
 ## Canonical visual environment
 
 Run from the repository root:

@@ -4,6 +4,7 @@ const path = require("node:path");
 const assert = require("node:assert/strict");
 const { createServer, root } = require("./server.cjs");
 const { audit } = require("./audit.cjs");
+const { checkDecorativeGraphics } = require("./decorative.cjs");
 const variants = ["minimal", "quote", "discount", "long", "long-no-discount"];
 async function run(library) {
   const output = path.join(root, ".cache/pdf-tests");
@@ -78,6 +79,16 @@ async function run(library) {
       const result = await audit(filename, variant, fields);
       results.push(result);
       console.log(JSON.stringify(result));
+      if (variant === "minimal") {
+        const decorative = await checkDecorativeGraphics(page);
+        await fs.writeFile(
+          path.join(output, "minimal-decorative.pdf"),
+          decorative
+        );
+        console.log(
+          "Decorative graphics remain visible without structure tags or MCIDs"
+        );
+      }
       await page.close();
     }
     await fs.writeFile(
