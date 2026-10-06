@@ -636,12 +636,13 @@ function processElement(
   }
   context.tagMap.set(element, pdfTag);
 
-  // The whole graphic is decorative; SVG descendants must not re-enter the
-  // logical structure as independent tags.
-  if (
-    structureType === PDF_STRUCTURE_TYPES.Artifact &&
-    element.tagName.toLowerCase() === "svg"
-  ) {
+  // Artifact descendants must retain artifact IDs for painting without
+  // re-entering the logical structure as independent tags.
+  if (structureType === PDF_STRUCTURE_TYPES.Artifact) {
+    for (const child of Array.from(element.querySelectorAll("*"))) {
+      applyTagIdToElement(child, tagId);
+      context.tagIdMap.set(child, tagId);
+    }
     return pdfTag;
   }
 
@@ -650,8 +651,8 @@ function processElement(
   for (const child of childElements) {
     if (child.nodeType === Node.ELEMENT_NODE) {
       const childTag = processElement(child, context);
-      // Only add non-null child tags
-      if (childTag) {
+      // Artifact IDs belong to painting operations, never to StructTreeRoot.
+      if (childTag && childTag.type !== PDF_STRUCTURE_TYPES.Artifact) {
         pdfTag.children?.push(childTag);
       }
     }
@@ -696,6 +697,7 @@ export function generateDocumentStructure(htmlElement: Element | Element[]): {
       tag.linkDestinationIdentifier = `html2pdf-${targetTag.id}`;
     }
     for (const [element, tag] of context.tagMap) {
+      if (tag.type === PDF_STRUCTURE_TYPES.Artifact) continue;
       if (
         element.id ||
         tag.type === PDF_STRUCTURE_TYPES.TH ||
@@ -743,7 +745,7 @@ export function generateDocumentStructure(htmlElement: Element | Element[]): {
     // Process each element in the array
     for (const element of htmlElement) {
       const childTag = processElement(element, context);
-      if (childTag) {
+      if (childTag && childTag.type !== PDF_STRUCTURE_TYPES.Artifact) {
         parentTag.children?.push(childTag);
       }
     }
@@ -759,7 +761,10 @@ export function generateDocumentStructure(htmlElement: Element | Element[]): {
   const documentStructure = processElement(htmlElement, context);
 
   // If the root element was skipped, create a minimal document structure
-  if (!documentStructure) {
+  if (
+    !documentStructure ||
+    documentStructure.type === PDF_STRUCTURE_TYPES.Artifact
+  ) {
     return {
       structure: {
         id: 0,

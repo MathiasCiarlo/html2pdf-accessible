@@ -50,7 +50,7 @@ function checkReport(xml, expected = 1) {
 }
 async function validate() {
   const dir = path.join(root, ".cache/pdf-tests");
-  for (const variant of variants) {
+  for (const variant of [...variants, "minimal-decorative"]) {
     const pdf = path.join(dir, `${variant}.pdf`);
     await fs.access(pdf);
     let result;
