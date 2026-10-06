@@ -67,10 +67,10 @@ jobs:
       - name: Export, inspect, compare images and test package
         run: >-
           docker run --rm --mount "type=bind,source=$PWD,target=/work"
-          --mount type=volume,source=html2pdf-test-deps,target=/work/node_modules
+          --user "$(id -u):$(id -g)"
+          --env HOME=/tmp --env npm_config_cache=/tmp/npm-cache
           html2pdf-tests bash -lc
           "npm ci --ignore-scripts && npm run test:pdf && npm run test:pdf:visual && npm run build && npm run test:package"
-      - run: npm ci --ignore-scripts
       - name: Validate PDF/UA-1
         run: npm run test:pdf:validate
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
